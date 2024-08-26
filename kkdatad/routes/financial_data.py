@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Header
-from auth import is_authorized, check_traffic_limit
-from compression import compress_data
-from cache import get_cached_data
-from database import get_financial_data
+from kkdatad.auth import is_authorized, check_traffic_limit
+from kkdatad.compression import compress_data
+# from cache import get_cached_data
+from kkdatad.database import get_financial_data
 
 router = APIRouter()
 
@@ -12,7 +12,7 @@ async def fetch_financial_data(query: str, api_key: str = Header(None)):
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     try:
-        data = await get_cached_data(query)
+        data = await get_financial_data(query)
         compressed_data = compress_data(str(data))
         if not await check_traffic_limit(api_key, len(compressed_data)):
             raise HTTPException(status_code=403, detail="Traffic limit exceeded")

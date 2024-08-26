@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+kkdatad.egg-info/PKG-INFO
+kkdatad.egg-info/SOURCES.txt
+kkdatad.egg-info/dependency_links.txt
+kkdatad.egg-info/requires.txt
+kkdatad.egg-info/top_level.txt

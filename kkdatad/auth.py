@@ -17,8 +17,15 @@ async def generate_api_key(username: str, email: str):
 async def is_authorized(api_key: str):
     query = f"SELECT 1 FROM users WHERE api_key = '{api_key}' LIMIT 1"
     client = await get_client()
-    result = await client.fetchval(query)
+
+    async with client.cursor() as cursor:
+        await cursor.execute(query)
+        result = await cursor.fetchone()
+
+    # Check if any rows were returned
     return result is not None
+
+
 
 async def check_traffic_limit(api_key: str, data_size: int):
     # Define the data limit in bytes (1GB in this case)
