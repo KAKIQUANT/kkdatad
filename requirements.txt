@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+sqlite3
+lz4
+asynch
+aiocache
