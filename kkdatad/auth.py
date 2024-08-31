@@ -1,63 +1,37 @@
-# auth.py
-import secrets
-from database import get_client
-from datetime import datetime
-from uuid import uuid4
+from jose import jwt
+from passlib.context import CryptContext
+from fastapi import Depends
+from fastapi.security import OAuth2PasswordBearer
+from kkdatad.database import SessionLocal
+import kkdatad.models as models
 
-async def generate_api_key(username: str, email: str):
-    api_key = secrets.token_hex(16)
-    query = f"""
-    INSERT INTO users (id, username, email, api_key) 
-    VALUES ('{uuid4()}', '{username}', '{email}', '{api_key}')
-    """
-    client = await get_client()
-    await client.execute(query)
-    return api_key
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-async def is_authorized(api_key: str):
-    query = f"SELECT 1 FROM users WHERE api_key = '{api_key}' LIMIT 1"
-    client = await get_client()
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
 
-    async with client.cursor() as cursor:
-        await cursor.execute(query)
-        result = await cursor.fetchone()
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
-    # Check if any rows were returned
-    return result is not None
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    username: str = payload.get("sub")
+    user = SessionLocal().query(models.User).filter_by(username = username).first()
+    return user
 
-async def check_traffic_limit(api_key: str, data_size: int):
-    # Define the data limit in bytes (1GB in this case)
-    DATA_LIMIT = 1 * 1024 * 1024 * 1024  # 1GB
-
-    client = await get_client()
-
-    # Check if the API key exists in the usage table
-    usage_query = f"SELECT usage_bytes FROM api_usage WHERE api_key = '{api_key}' LIMIT 1"
-    usage_record = await client.fetchrow(usage_query)
-
-    if usage_record:
-        # Calculate new usage
-        new_usage = usage_record['usage_bytes'] + data_size
-
-        # Check if the new usage exceeds the limit
-        if new_usage > DATA_LIMIT:
-            return False
-
-        # Update the usage in the database
-        update_query = f"""
-        UPDATE api_usage 
-        SET usage_bytes = {new_usage}, last_updated = '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}'
-        WHERE api_key = '{api_key}'
-        """
-        await client.execute(update_query)
-    else:
-        # If no record exists for this API key, insert a new one
-        insert_query = f"""
-        INSERT INTO api_usage (api_key, usage_bytes, last_updated)
-        VALUES ('{api_key}', {data_size}, '{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}')
-        """
-        await client.execute(insert_query)
-
-    return True
+def verify_token(token):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return True
+    except Exception as e:
+        return False

@@ -15,8 +15,16 @@ License-File: LICENSE
 Requires-Dist: fastapi
 Requires-Dist: uvicorn
 Requires-Dist: lz4
-Requires-Dist: asynch
+Requires-Dist: clickhouse_connect
 Requires-Dist: aiocache
+Requires-Dist: sqlalchemy
+Requires-Dist: python-jose
+Requires-Dist: passlib
+Requires-Dist: bcrypt
+Requires-Dist: pydantic
+Requires-Dist: pyjwt
+Requires-Dist: requests
+Requires-Dist: mysql
 
 # kkdatad: Quant Data Server for external query.
 KKdatad acts as the fundemental server for users to easily download high quality financial data from our server (KKDB). It serves as a fixer between users and the end-point database. Main benefits as follows:

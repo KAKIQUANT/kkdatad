@@ -1,38 +1,22 @@
 import clickhouse_connect
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from kkdatad.config import SQLALCHEMY_DATABASE_URL
 
-async def get_client():
+async def get_cc_client():
+    from kkdatad.config import CC_DATABASE_HOST, CC_DATABASE_PASSWORD, CC_DATABASE_PORT
     # Assuming you're using an async connection, adjust as per actual usage
-    client = clickhouse_connect.get_client(host='localhost', username='default', password='default')
+    client = await clickhouse_connect.get_async_client(host=CC_DATABASE_HOST, username='default', password=CC_DATABASE_PASSWORD, port=CC_DATABASE_PORT)
     return client
 
-async def setup_database():
-    client = await get_client()
+# SQLAlchemy setup
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL
+)
 
-    # Create the users table
-    client.command('''
-    CREATE TABLE IF NOT EXISTS users (
-        id UUID DEFAULT generateUUIDv4(),
-        username String,
-        email String,
-        api_key String,
-        created_at DateTime DEFAULT now()
-    ) ENGINE = MergeTree()
-    ORDER BY (created_at)
-    ''')
+#我们创建了一个SessionLocal类的实例，这个实例将是实际的数据库会话。sessionmaker是sqlalchemy2.0的使用方式，1.4要使用Session(engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    # Create the api_usage table to track API key usage
-    client.command('''
-    CREATE TABLE IF NOT EXISTS api_usage (
-        api_key String,
-        usage_bytes UInt64,
-        last_updated DateTime DEFAULT now()
-    ) ENGINE = MergeTree()
-    ORDER BY (api_key)
-    ''')
-
-
-    
-async def get_financial_data(query: str):
-    client = await get_client()
-    result = await client.fetch(query)
-    return result
+#我们将用这个类继承，来创建每个数据库模型或类（ORM 模型）
+Base = declarative_base()

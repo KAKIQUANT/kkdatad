@@ -1,5 +1,13 @@
 fastapi
 uvicorn
 lz4
-asynch
+clickhouse_connect
 aiocache
+sqlalchemy
+python-jose
+passlib
+bcrypt
+pydantic
+pyjwt
+requests
+mysql
