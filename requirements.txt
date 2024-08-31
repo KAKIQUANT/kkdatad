@@ -12,4 +12,7 @@ pyjwt
 requests
 mysql
 jinja2
-markdown
+pandas
+numpy
+pymysql
+sqlglot
