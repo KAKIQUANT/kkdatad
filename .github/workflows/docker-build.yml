@@ -32,8 +32,5 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/kkdatad:latest
 
-    - name: Image digest
-      run: echo "Image digest: ${{ steps.docker_build.outputs.digest }}"
-
     - name: Clean up
       run: docker builder prune -f
