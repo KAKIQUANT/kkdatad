@@ -32,6 +32,7 @@ jobs:
         file: Dockerfile  # Specify the location of the Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_USERNAME }}/kkdatad:latest
+        platforms: linux/amd64,linux/arm64,linux/arm/v7,darwin/amd64,darwin/arm64  # Include macOS platforms
 
     - name: Clean up
       run: docker builder prune -f
