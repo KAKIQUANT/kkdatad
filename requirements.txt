@@ -11,3 +11,5 @@ pydantic
 pyjwt
 requests
 mysql
+jinja2
+markdown
