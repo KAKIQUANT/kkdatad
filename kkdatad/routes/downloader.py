@@ -32,3 +32,22 @@ async def sql(query: str, api_key: str = Header(None)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@data_router.post("/sql-free/")
+async def sql_free(query: str):
+    try:
+        client = await get_cc_client()
+        df = await client.query_df(query)
+
+        # Serialize the DataFrame to a binary format using pickle
+        serialized_df = pickle.dumps(df)
+
+        # Compress the serialized DataFrame using lz4
+        compressed_data = compress_data(serialized_df)
+
+        return {
+            "status": "success",
+            "data": compressed_data.hex()  # Convert compressed data to hex for transmission
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -25,6 +25,11 @@ Requires-Dist: pydantic
 Requires-Dist: pyjwt
 Requires-Dist: requests
 Requires-Dist: mysql
+Requires-Dist: jinja2
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: pymysql
+Requires-Dist: sqlglot
 
 # kkdatad: Quant Data Server for external query.
 KKdatad acts as the fundemental server for users to easily download high quality financial data from our server (KKDB). It serves as a fixer between users and the end-point database. Main benefits as follows:

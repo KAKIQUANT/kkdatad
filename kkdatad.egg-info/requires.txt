@@ -11,3 +11,8 @@ pydantic
 pyjwt
 requests
 mysql
+jinja2
+pandas
+numpy
+pymysql
+sqlglot
