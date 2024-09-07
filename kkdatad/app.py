@@ -4,6 +4,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.requests import Request
 from routes.downloader import data_router
 from routes.user import user_router
+from routes.proxyer import proxy_router
 from kkdatad.database import engine
 import kkdatad.models as models
 
@@ -15,7 +16,7 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(data_router)
 # Include the user registration routes
 app.include_router(user_router)
-
+app.include_router(proxy_router)
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -33,6 +34,7 @@ async def root(request: Request):
 
     <h2>支持的功能</h2>
     <ul>
+        <li>Tushare Pro, AKshare HTTP 代理服务，用户的HTTP请求从kkdatac发出，经过kkdatad代理，向Tushare Pro, AKshare发出请求，返回数据。</li>
         <li>SQL直接查询，用户的SQL执行命令从kkdatac发出，经过kkdatad代理，向数据库直接获取数据，压缩后返回。</li>
         <li>SQL执行需要保证不出现注入漏洞，应添加独立账户，限制写入权限，限制可查看的内容。这是参考了Bigquant量化平台的思路。</li>
     </ul>
