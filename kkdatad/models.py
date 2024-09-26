@@ -20,15 +20,18 @@ class Group(Base):
 
 
 class User(Base):
-    __tablename__ = "user" # 数据库表名
-    id = Column(Integer,primary_key=True)
-    username = Column(String(24), nullable=False, unique=True, comment="用户名")
-    password = Column(String(500), nullable=False, comment="密码")
-    nickname = Column(String(100),nullable=True, comment="昵称")
-    email = Column(String(100), nullable=True,  comment="电子邮箱")
-    isadmin = Column(Boolean,default=False,comment="管理员")
-    invite_codes = relationship("InviteCode", back_populates="creator")
-    api_keys = relationship("APIKey", back_populates="user")
+    __tablename__ = 'user'
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(60), unique=True, index=True, nullable=False)
+    password = Column(String(60), nullable=False)
+    nickname = Column(String(60))
+    email = Column(String(60))
+    isadmin = Column(Boolean, default=False)
+    is_premium = Column(Boolean, default=False)
+    # Relationships
+    api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
+    invite_codes = relationship("InviteCode", back_populates="creator", cascade="all, delete-orphan")
 
 class Auth(Base):
     __tablename__ = 'auth'
@@ -40,19 +43,25 @@ class Auth(Base):
     endpoint = Column(String(60), comment="路由名称")
 
 class APIKey(Base):
-    __tablename__ = 'api-key'
+    __tablename__ = 'api_keys'
 
-    id = Column(Integer, primary_key=True)
-    # : API
-    api_key = Column(String(60), comment="API")
+    id = Column(Integer, primary_key=True, index=True)
+    key = Column(String(60), unique=True, index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    user = relationship("User", back_populates="api_keys")
 
 class InviteCode(Base):
     __tablename__ = 'invite_codes'
 
     id = Column(Integer, primary_key=True, index=True)
-    code = Column(String, unique=True, index=True, nullable=False)
-    created_by = Column(String, ForeignKey('users.username'), nullable=False)
+    code = Column(String(60), unique=True, index=True, nullable=False)
+    created_by = Column(Integer, ForeignKey('user.id'), nullable=False)
     is_used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    # Relationships
     creator = relationship("User", back_populates="invite_codes")
+

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 import kkdatad.models as models
 from datetime import datetime, timedelta
 import redis
-
+from config import REDIS_DATABASE_HOST, REDIS_DATABASE_PORT
 # Constants and configurations
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7" # Replace with your actual secret key
 ALGORITHM = "HS256"
@@ -26,7 +26,7 @@ def get_db():
         db.close()
 
 # Initialize Redis client for token blacklisting
-redis_client = redis.Redis(host='localhost', port=6379, db=0)
+redis_client = redis.Redis(host=REDIS_DATABASE_HOST, port=REDIS_DATABASE_PORT, db=0)
 
 def verify_password(plain_password, hashed_password):
     """Verify a plain password against a hashed password."""

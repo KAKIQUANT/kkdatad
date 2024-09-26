@@ -29,11 +29,12 @@ def get_db():
 class RegisterForm(BaseModel):
     username: str
     password: str
-    invite_code: str
+    invite_code: str | None = None
 
 
 
 class UserRes(BaseModel):
+    id: int
     username: str
     nickname: str | None = None
     email: str | None = None
@@ -47,31 +48,36 @@ def register(user: RegisterForm, db: Session = Depends(get_db)):
     if existing_user:
         return JSONResponse(
             status_code=400,
-            content={"code": 400, "msg": "User already exists"},
+            content={"code": 400, "msg": "用户已存在"},
         )
 
-    # Validate the invite code
-    invite_code = db.query(models.InviteCode).filter_by(code=user.invite_code, is_used=False).first()
-    if not invite_code:
-        return JSONResponse(
-            status_code=400,
-            content={"code": 400, "msg": "Invalid or used invite code"},
-        )
-
-    # Mark the invite code as used
-    invite_code.is_used = True
-    db.commit()
+    # If an invite code is provided, validate it
+    if user.invite_code:
+        invite_code = db.query(models.InviteCode).filter_by(code=user.invite_code, is_used=False).first()
+        if not invite_code:
+            return JSONResponse(
+                status_code=400,
+                content={"code": 400, "msg": "Invalid or used invite code"},
+            )
+        # Mark the invite code as used
+        invite_code.is_used = True
+        db.commit()
 
     # Create the new user
     db_user = models.User(
         username=user.username,
         password=get_password_hash(user.password),
     )
+    # After marking the invite code as used
+    if user.invite_code:
+        # Grant additional privileges
+        db_user.is_premium = True
+
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
 
-    return JSONResponse({"code": 0, "msg": "Register success"})
+    return JSONResponse({"code": 0, "msg": "注册成功"})
 
 
 
@@ -112,7 +118,7 @@ def generate_invite_code(
     # Create a new InviteCode object
     db_invite_code = models.InviteCode(
         code=invite_code,
-        created_by=current_user.username,
+        created_by=current_user.id,
         is_used=False,
     )
 
