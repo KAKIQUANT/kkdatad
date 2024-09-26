@@ -4,6 +4,8 @@ User, Group, Auth, APIKey
 """
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,DateTime
 from kkdatad.database import Base
+from sqlalchemy.orm import relationship
+from datetime import datetime
 
 class Group(Base):
     __tablename__ = 'group'
@@ -25,6 +27,8 @@ class User(Base):
     nickname = Column(String(100),nullable=True, comment="昵称")
     email = Column(String(100), nullable=True,  comment="电子邮箱")
     isadmin = Column(Boolean,default=False,comment="管理员")
+    invite_codes = relationship("InviteCode", back_populates="creator")
+    api_keys = relationship("APIKey", back_populates="user")
 
 class Auth(Base):
     __tablename__ = 'auth'
@@ -41,3 +45,14 @@ class APIKey(Base):
     id = Column(Integer, primary_key=True)
     # : API
     api_key = Column(String(60), comment="API")
+
+class InviteCode(Base):
+    __tablename__ = 'invite_codes'
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String, unique=True, index=True, nullable=False)
+    created_by = Column(String, ForeignKey('users.username'), nullable=False)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    creator = relationship("User", back_populates="invite_codes")

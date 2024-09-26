@@ -16,3 +16,4 @@ pandas
 numpy
 pymysql
 sqlglot
+redis
