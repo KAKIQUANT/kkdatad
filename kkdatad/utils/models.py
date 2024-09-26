@@ -32,6 +32,7 @@ class User(Base):
     # Relationships
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     invite_codes = relationship("InviteCode", back_populates="creator", cascade="all, delete-orphan")
+    api_usage = relationship("APIUsage", back_populates="user", uselist=False)
 
 class Auth(Base):
     __tablename__ = 'auth'
@@ -65,3 +66,12 @@ class InviteCode(Base):
     # Relationships
     creator = relationship("User", back_populates="invite_codes")
 
+class APIUsage(Base):
+    __tablename__ = 'api_usage'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    total_quota = Column(Integer, default=1000)  # Set default quota
+    used_quota = Column(Integer, default=0)
+
+    user = relationship("User", back_populates="api_usage")

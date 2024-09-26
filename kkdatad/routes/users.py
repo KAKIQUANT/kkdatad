@@ -39,6 +39,10 @@ class UserRes(BaseModel):
     email: str | None = None
     isadmin: bool = False
 
+class UpdateUserForm(BaseModel):
+    nickname: str | None = None
+    email: str | None = None
+    # password: str | None = None  # Uncomment if allowing password changes
 
 @user_router.post("/register")
 def register(user: RegisterForm, db: Session = Depends(get_db)):
@@ -133,6 +137,51 @@ def generate_invite_code(
             "invite_code": invite_code,
         }
     )
+
+@user_router.put("/users/update")
+def update_user_info(
+    user_update: UpdateUserForm,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter(models.User.id == current_user.id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if user_update.nickname is not None:
+        user.nickname = user_update.nickname
+    if user_update.email is not None:
+        user.email = user_update.email
+    # if user_update.password is not None:
+    #     user.password = get_password_hash(user_update.password)
+
+    db.commit()
+    db.refresh(user)
+
+    return {
+        "username": user.username,
+        "nickname": user.nickname,
+        "email": user.email,
+        "isadmin": user.isadmin,
+    }
+
+@user_router.get("/users/api-quota")
+def get_api_quota(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    api_usage = db.query(models.APIUsage).filter_by(user_id=current_user.id).first()
+    if not api_usage:
+        # Initialize API usage if not exists
+        api_usage = models.APIUsage(user_id=current_user.id)
+        db.add(api_usage)
+        db.commit()
+        db.refresh(api_usage)
+
+    return {
+        "totalQuota": api_usage.total_quota,
+        "usedQuota": api_usage.used_quota,
+    }
 
 
 @user_router.get("/users/info", response_model=UserRes)
