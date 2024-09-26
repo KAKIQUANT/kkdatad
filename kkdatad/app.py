@@ -1,13 +1,25 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from routes.sql import data_router
 from routes.users import user_router
 from kkdatad.database import engine
 import kkdatad.models as models
 from kkdatad.routes.api_keys import api_keys_router
+
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 models.Base.metadata.create_all(bind=engine)
 templates = Jinja2Templates(directory="templates")
 
