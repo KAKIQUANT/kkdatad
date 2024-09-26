@@ -2,12 +2,12 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
-from kkdatad.database import SessionLocal
+from kkdatad.utils.database import SessionLocal
 from sqlalchemy.orm import Session
-import kkdatad.models as models
+import kkdatad.utils.models as models
 from datetime import datetime, timedelta
 import redis
-from config import REDIS_DATABASE_HOST, REDIS_DATABASE_PORT
+from kkdatad.utils.config import REDIS_DATABASE_HOST, REDIS_DATABASE_PORT
 # Constants and configurations
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7" # Replace with your actual secret key
 ALGORITHM = "HS256"

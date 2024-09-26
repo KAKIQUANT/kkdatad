@@ -3,12 +3,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlglot import Schema
 
-from kkdatad.config import SQLALCHEMY_DATABASE_URL
+from kkdatad.utils.config import SQLALCHEMY_DATABASE_URL
 
 async def get_cc_client():
-    from kkdatad.config import CC_DATABASE_HOST, CC_DATABASE_PASSWORD, CC_DATABASE_PORT
+    from kkdatad.utils.config import CC_DATABASE_HOST, CC_DATABASE_PASSWORD, CC_DATABASE_PORT
     # Assuming you're using an async connection, adjust as per actual usage
     client = await clickhouse_connect.get_async_client(host=CC_DATABASE_HOST, username='default', password=CC_DATABASE_PASSWORD, port=CC_DATABASE_PORT)
     return client

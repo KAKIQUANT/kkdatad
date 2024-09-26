@@ -1,9 +1,8 @@
 from uuid import uuid4
-from fastapi.security import OAuth2PasswordBearer
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from kkdatad.auth import (
+from kkdatad.utils.auth import (
     get_password_hash,
     verify_password,
     create_access_token,
@@ -12,8 +11,8 @@ from kkdatad.auth import (
     oauth2_scheme
 )
 from fastapi.responses import JSONResponse
-from kkdatad.database import SessionLocal
-import kkdatad.models as models
+from kkdatad.utils.database import SessionLocal
+import kkdatad.utils.models as models
 
 user_router = APIRouter()
 

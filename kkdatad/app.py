@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from routes.sql import data_router
 from routes.users import user_router
-from kkdatad.database import engine
-import kkdatad.models as models
+from kkdatad.utils.database import engine
+import kkdatad.utils.models as models
 from kkdatad.routes.api_keys import api_keys_router
 
 

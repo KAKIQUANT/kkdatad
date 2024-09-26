@@ -1,11 +1,11 @@
 # In your routes file, e.g., kkdatad/routes/api_keys.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from uuid import uuid4
-from kkdatad.auth import get_current_user, get_password_hash
-from kkdatad.database import SessionLocal
-import kkdatad.models as models
+from kkdatad.utils.auth import get_current_user, get_password_hash
+from kkdatad.utils.database import SessionLocal
+import kkdatad.utils.models as models
 
 api_keys_router = APIRouter()
 

@@ -1,8 +1,6 @@
-import asyncio
-import pandas as pd
 from fastapi import APIRouter, HTTPException, Header
-from kkdatad.compression import compress_data
-from kkdatad.database import get_cc_client
+from kkdatad.utils.compression import compress_data
+from kkdatad.utils.database import get_cc_client
 from kkdatad.utils.verify import is_authorized, check_traffic_limit
 import pickle
 

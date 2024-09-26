@@ -1,4 +1,4 @@
-from kkdatad.auth import verify_token
+from kkdatad.utils.auth import verify_token
 
 async def is_authorized(id: str) -> bool:
     """

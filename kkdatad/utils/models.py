@@ -3,7 +3,7 @@ MySQL 数据库模型
 User, Group, Auth, APIKey
 """
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,DateTime
-from kkdatad.database import Base
+from kkdatad.utils.database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
 
