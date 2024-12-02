@@ -2,7 +2,7 @@
 MySQL 数据库模型
 User, Group, Auth, APIKey
 """
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,DateTime
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,DateTime, Float
 from kkdatad.utils.database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -33,6 +33,7 @@ class User(Base):
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     invite_codes = relationship("InviteCode", back_populates="creator", cascade="all, delete-orphan")
     api_usage = relationship("APIUsage", back_populates="user", uselist=False)
+    queries = relationship("QueryAnalytics", back_populates="user", cascade="all, delete-orphan")
 
 class Auth(Base):
     __tablename__ = 'auth'
@@ -75,3 +76,16 @@ class APIUsage(Base):
     used_quota = Column(Integer, default=0)
 
     user = relationship("User", back_populates="api_usage")
+
+class QueryAnalytics(Base):
+    __tablename__ = 'query_analytics'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    query = Column(String(4096), nullable=False)
+    execution_time = Column(Float, nullable=False)
+    rows_returned = Column(Integer, nullable=False)
+    error = Column(String(1024))
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="queries")

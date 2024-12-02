@@ -1,30 +1,25 @@
-# Use Ubuntu as a parent image
-FROM ubuntu:22.04
+FROM python:3.11-slim
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Update the package list and install necessary packages
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-dev \
-    default-libmysqlclient-dev \
-    build-essential \
-    pkg-config \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the entire project into the container's /app directory
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
 COPY . .
 
-# Install any dependencies specified in requirements.txt
-RUN pip3 install --no-cache-dir .
+# Create non-root user for security
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
 
-# Expose the port FastAPI will run on
+# Expose port
 EXPOSE 8000
 
-# Set environment variables for production
-ENV PYTHONUNBUFFERED=1
-
-# Command to run the FastAPI application using uvicorn
+# Run the application
 CMD ["uvicorn", "kkdatad.app:app", "--host", "0.0.0.0", "--port", "8000"]

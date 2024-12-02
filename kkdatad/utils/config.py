@@ -1,9 +1,55 @@
-# Configuration parameters can be defined here if needed
-CC_DATABASE_HOST = "10.201.8.179"
-CC_DATABASE_PORT = 8123
-CC_DATABASE_PASSWORD = "20040116Wsy"
+from pydantic_settings import BaseSettings
+from typing import List
+import os
+from dotenv import load_dotenv
 
-SQLALCHEMY_DATABASE_URL = "mysql+pymysql://root:20040116Wsy@10.201.8.179:3306/{db}?charset=utf8mb4"
+# Load environment variables from .env file
+load_dotenv()
 
-REDIS_DATABASE_HOST = CC_DATABASE_HOST
-REDIS_DATABASE_PORT = 6379
+class Settings(BaseSettings):
+    # Database settings
+    CC_DATABASE_HOST: str = os.getenv("CC_DATABASE_HOST", "localhost")
+    CC_DATABASE_PORT: int = int(os.getenv("CC_DATABASE_PORT", "8123"))
+    CC_DATABASE_PASSWORD: str = os.getenv("CC_DATABASE_PASSWORD", "")
+    
+    # MySQL settings
+    MYSQL_USER: str = os.getenv("MYSQL_USER", "root")
+    MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "")
+    MYSQL_HOST: str = os.getenv("MYSQL_HOST", "localhost")
+    MYSQL_PORT: int = int(os.getenv("MYSQL_PORT", "3306"))
+    
+    # Redis settings
+    REDIS_DATABASE_HOST: str = os.getenv("REDIS_HOST", "localhost")
+    REDIS_DATABASE_PORT: int = int(os.getenv("REDIS_PORT", "6379"))
+    
+    # Security settings
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-here")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # CORS settings
+    CORS_ORIGINS: List[str] = [
+        "http://localhost:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "https://webui.kakiquant.icu"
+    ]
+    
+    # Host settings
+    ALLOWED_HOSTS: List[str] = ["*"]
+    
+    # API settings
+    DEFAULT_API_QUOTA: int = 1000
+    
+    @property
+    def SQLALCHEMY_DATABASE_URL(self) -> str:
+        return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{{db}}?charset=utf8mb4"
+
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+settings = Settings()
+
+# Export all settings
+__all__ = ["settings"]
