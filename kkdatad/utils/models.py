@@ -2,7 +2,7 @@
 MySQL 数据库模型
 User, Group, Auth, APIKey
 """
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,DateTime, Float
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String,DateTime, Float, JSON, Text
 from kkdatad.utils.database import Base
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -34,6 +34,8 @@ class User(Base):
     invite_codes = relationship("InviteCode", back_populates="creator", cascade="all, delete-orphan")
     api_usage = relationship("APIUsage", back_populates="user", uselist=False)
     queries = relationship("QueryAnalytics", back_populates="user", cascade="all, delete-orphan")
+    factors = relationship("Factor", back_populates="creator")
+    factor_evaluations = relationship("FactorEvaluation", back_populates="user")
 
 class Auth(Base):
     __tablename__ = 'auth'
@@ -89,3 +91,38 @@ class QueryAnalytics(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="queries")
+
+class Factor(Base):
+    __tablename__ = 'factors'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(60), unique=True, nullable=False)
+    description = Column(String(255))
+    category = Column(String(60), nullable=False)  # technical, fundamental, alternative
+    version = Column(String(20), default="1.0.0")
+    metadata = Column(JSON)
+    code = Column(Text, nullable=False)  # The actual factor computation code
+    created_by = Column(Integer, ForeignKey('user.id'), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_public = Column(Boolean, default=False)
+    
+    # Relationships
+    creator = relationship("User", back_populates="factors")
+    evaluations = relationship("FactorEvaluation", back_populates="factor")
+
+class FactorEvaluation(Base):
+    __tablename__ = 'factor_evaluations'
+
+    id = Column(Integer, primary_key=True, index=True)
+    factor_id = Column(Integer, ForeignKey('factors.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
+    ic_mean = Column(Float)  # Information Coefficient mean
+    ic_std = Column(Float)   # Information Coefficient std
+    sharpe = Column(Float)   # Factor Sharpe ratio
+    turnover = Column(Float) # Factor turnover
+    evaluation_date = Column(DateTime, default=datetime.utcnow)
+    metadata = Column(JSON)  # Additional evaluation metrics
+    
+    factor = relationship("Factor", back_populates="evaluations")
+    user = relationship("User", back_populates="factor_evaluations")

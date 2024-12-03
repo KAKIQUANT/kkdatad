@@ -12,6 +12,7 @@ from kkdatad.routes.api_keys import api_keys_router
 from kkdatad.utils.config import ALLOWED_HOSTS, CORS_ORIGINS
 import logging
 from typing import Any
+from routes.factors import factor_router
 
 # Configure logging
 logging.basicConfig(
@@ -47,6 +48,11 @@ templates = Jinja2Templates(directory="templates")
 app.include_router(data_router, prefix="/api/v1", tags=["Data"])
 app.include_router(user_router, prefix="/api/v1", tags=["Users"])
 app.include_router(api_keys_router, prefix="/api/v1/users", tags=["API Keys"])
+app.include_router(
+    factor_router, 
+    prefix="/api/v1", 
+    tags=["Factors", "Factor Analysis", "Factor Computation"]
+)
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -102,7 +108,7 @@ async def root(request: Request) -> Any:
             </li>
             <li>
                 <strong>安全的 SQL 执行</strong>：
-                <p>为了防止 SQL 注入漏洞，我们添加了独立的数据库账户��限制写入权限和可查看的内容。这一设计参考了 BigQuant 量化平台的思路，确保数据安全。</p>
+                <p>为了防止 SQL 注入漏洞，我们添加了独立的数据库账户限制写入权限和可查看的内容。这一设计参考了 BigQuant 量化平台的思路，确保数据安全。</p>
             </li>
             <li>
                 <strong>API Key 认证</strong>：

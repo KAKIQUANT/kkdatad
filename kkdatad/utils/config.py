@@ -41,6 +41,17 @@ class Settings(BaseSettings):
     # API settings
     DEFAULT_API_QUOTA: int = 1000
     
+    # GM API settings
+    GM_TOKEN: str = os.getenv("GM_TOKEN", "")
+    LOCAL_MODE: bool = os.getenv("LOCAL_MODE", "").lower() == "true"
+    
+    # Factor computation settings
+    DEFAULT_FIELDS: List[str] = [
+        'open', 'high', 'low', 'close', 
+        'volume', 'amount', 'factor'
+    ]
+    DEFAULT_ADJUST: str = 'none'
+    
     @property
     def SQLALCHEMY_DATABASE_URL(self) -> str:
         return f"mysql+pymysql://{self.MYSQL_USER}:{self.MYSQL_PASSWORD}@{self.MYSQL_HOST}:{self.MYSQL_PORT}/{{db}}?charset=utf8mb4"
