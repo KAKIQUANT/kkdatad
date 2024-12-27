@@ -100,7 +100,7 @@ class Factor(Base):
     description = Column(String(255))
     category = Column(String(60), nullable=False)  # technical, fundamental, alternative
     version = Column(String(20), default="1.0.0")
-    metadata = Column(JSON)
+    factor_metadata = Column(JSON)
     code = Column(Text, nullable=False)  # The actual factor computation code
     created_by = Column(Integer, ForeignKey('user.id'), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -122,7 +122,7 @@ class FactorEvaluation(Base):
     sharpe = Column(Float)   # Factor Sharpe ratio
     turnover = Column(Float) # Factor turnover
     evaluation_date = Column(DateTime, default=datetime.utcnow)
-    metadata = Column(JSON)  # Additional evaluation metrics
+    evaluation_metadata = Column(JSON)  # Changed from metadata to evaluation_metadata
     
     factor = relationship("Factor", back_populates="evaluations")
     user = relationship("User", back_populates="factor_evaluations")

@@ -6,6 +6,8 @@ from uuid import uuid4
 from kkdatad.utils.auth import get_current_user, get_password_hash
 from kkdatad.utils.database import SessionLocal
 import kkdatad.utils.models as models
+from fastapi import status
+from datetime import datetime
 
 api_keys_router = APIRouter()
 
@@ -18,12 +20,26 @@ def get_db():
 
 class APIKeyCreateResponse(BaseModel):
     api_key: str
+    id: int
+    created_at: datetime
 
 @api_keys_router.post("/api-keys", response_model=APIKeyCreateResponse)
 def create_api_key(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
+    # Verify that the user exists
+    user = db.query(models.User).filter_by(id=current_user.id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User not found: id={current_user.id}"
+        )
+
+    # Log user information for debugging
+    print(f"Current user: id={current_user.id}, username={current_user.username}")
+    print(f"Found user: id={user.id}, username={user.username}")
+
     # Generate raw API key
     raw_key = str(uuid4())
     hashed_key = get_password_hash(raw_key)
@@ -31,13 +47,18 @@ def create_api_key(
     # Save hashed API key
     db_api_key = models.APIKey(
         key=hashed_key,
-        user_id=current_user.id
+        user_id=current_user.id,
+        is_active=True
     )
     db.add(db_api_key)
     db.commit()
     db.refresh(db_api_key)
 
-    return {"api_key": raw_key}
+    return {
+        "api_key": raw_key,
+        "id": db_api_key.id,
+        "created_at": db_api_key.created_at
+    }
 
 @api_keys_router.get("/api-keys")
 def list_api_keys(

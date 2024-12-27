@@ -13,6 +13,7 @@ from kkdatad.utils.auth import (
 from fastapi.responses import JSONResponse
 from kkdatad.utils.database import SessionLocal
 import kkdatad.utils.models as models
+from kkdatad.utils.config import settings
 
 user_router = APIRouter()
 
@@ -79,6 +80,15 @@ def register(user: RegisterForm, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+
+    # Create API usage record for the new user
+    api_usage = models.APIUsage(
+        user_id=db_user.id,
+        total_quota=settings.DEFAULT_API_QUOTA,
+        used_quota=0
+    )
+    db.add(api_usage)
+    db.commit()
 
     return JSONResponse({"code": 0, "msg": "注册成功"})
 

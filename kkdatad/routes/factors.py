@@ -20,7 +20,7 @@ class FactorCreate(BaseModel):
     description: str
     category: str
     code: str
-    metadata: dict = {}
+    factor_metadata: dict = {}
     is_public: bool = False
 
 class FactorResponse(BaseModel):
@@ -46,7 +46,7 @@ async def create_factor(
         description=factor.description,
         category=factor.category,
         code=factor.code,
-        metadata=factor.metadata,
+        factor_metadata=factor.factor_metadata,
         is_public=factor.is_public,
         created_by=current_user.id
     )
@@ -126,7 +126,7 @@ async def delete_factor(
 @factor_router.post("/factors/{factor_id}/evaluate")
 async def evaluate_factor(
     factor_id: int,
-    returns_data: pd.DataFrame,
+    returns_data: Dict,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
@@ -135,18 +135,21 @@ async def evaluate_factor(
     if not factor:
         raise HTTPException(status_code=404, detail="Factor not found")
 
+    # Convert dict to DataFrame
+    returns_df = pd.DataFrame.from_dict(returns_data)
+
     # Use kkfadb validator
     validator = FactorValidator()
     
     # Get factor data
-    factor_data = compute_factor(factor.code, returns_data)
+    factor_data = compute_factor(factor.code, returns_df)
     
     # Run validations
     evaluation = {
         "coverage": validator.check_coverage(factor_data),
         "normality": validator.check_normality(factor_data),
         "autocorr": validator.check_autocorrelation(factor_data),
-        "ic": validator.compute_ic(factor_data, returns_data['returns'])
+        "ic": validator.compute_ic(factor_data, returns_df['returns'])
     }
     
     # Save evaluation results
@@ -155,12 +158,12 @@ async def evaluate_factor(
         user_id=current_user.id,
         ic_mean=evaluation['ic']['ic'],
         ic_std=evaluation['ic']['t_stat'],
-        metadata=evaluation
+        evaluation_metadata=evaluation
     )
     db.add(db_eval)
     db.commit()
     
-    return evaluation 
+    return evaluation
 
 @factor_router.get("/factors/{factor_id}/plot")
 async def plot_factor(
@@ -190,11 +193,14 @@ async def plot_factor(
 async def compute_technical_factor(
     factor_type: str,
     parameters: Dict,
-    data: pd.DataFrame,
+    data: Dict,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
     """Compute technical factor values"""
+    # Convert dict to DataFrame
+    data_df = pd.DataFrame.from_dict(data)
+
     if factor_type == "momentum":
         factor = MomentumFactor(lookback_period=parameters.get("lookback_period", 20))
     elif factor_type == "volume_price":
@@ -203,7 +209,7 @@ async def compute_technical_factor(
         raise HTTPException(status_code=400, detail="Unsupported factor type")
         
     try:
-        factor_data = factor.compute(data)
+        factor_data = factor.compute(data_df)
         return {
             "name": factor.name,
             "data": factor_data.to_dict()

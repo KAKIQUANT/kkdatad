@@ -2,12 +2,13 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
-from kkdatad.utils.database import SessionLocal
+from kkdatad.utils.database import SessionLocal, get_db
 from sqlalchemy.orm import Session
 import kkdatad.utils.models as models
 from datetime import datetime, timedelta
 import redis
-from kkdatad.utils.config import REDIS_DATABASE_HOST, REDIS_DATABASE_PORT
+from kkdatad.utils.config import settings
+
 # Constants and configurations
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7" # Replace with your actual secret key
 ALGORITHM = "HS256"
@@ -18,15 +19,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 # OAuth2 scheme for token extraction
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 # Initialize Redis client for token blacklisting
-redis_client = redis.Redis(host=REDIS_DATABASE_HOST, port=REDIS_DATABASE_PORT, db=0)
+redis_client = redis.Redis(
+    host=settings.REDIS_HOST,
+    port=settings.REDIS_PORT,
+    db=0
+)
 
 def verify_password(plain_password, hashed_password):
     """Verify a plain password against a hashed password."""
@@ -67,7 +66,10 @@ def is_token_blacklisted(token: str):
     """Check if a token is blacklisted."""
     return redis_client.exists(f"blacklist:{token}")
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
     """Retrieve the current user based on the JWT token."""
     if is_token_blacklisted(token):
         raise HTTPException(
@@ -84,22 +86,19 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
                 detail="Invalid authentication credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-    except JWTError:
+    except JWTError as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
+            detail=f"Invalid authentication credentials: {str(e)}",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    # Retrieve user from the database
-    db = SessionLocal()
-    try:
-        user = db.query(models.User).filter_by(username=username).first()
-    finally:
-        db.close()
+    
+    # Retrieve user from the database using the provided session
+    user = db.query(models.User).filter_by(username=username).first()
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
+            detail=f"User not found: {username}",
             headers={"WWW-Authenticate": "Bearer"},
         )
     return user

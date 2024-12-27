@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -9,7 +10,7 @@ from routes.users import user_router
 from kkdatad.utils.database import engine
 import kkdatad.utils.models as models
 from kkdatad.routes.api_keys import api_keys_router
-from kkdatad.utils.config import ALLOWED_HOSTS, CORS_ORIGINS
+from kkdatad.utils.config import settings
 import logging
 from typing import Any
 from routes.factors import factor_router
@@ -30,11 +31,11 @@ app = FastAPI(
 )
 
 # Add security middlewares
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.ALLOWED_HOSTS)
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -42,7 +43,9 @@ app.add_middleware(
 
 # Initialize database
 models.Base.metadata.create_all(bind=engine)
-templates = Jinja2Templates(directory="templates")
+
+# Initialize templates
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
 # Include routers
 app.include_router(data_router, prefix="/api/v1", tags=["Data"])
